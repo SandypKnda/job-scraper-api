@@ -36,3 +36,6 @@ def scrape():
             }
             all_jobs.append(job)
     return {"jobs": all_jobs}
+@app.get("/")
+def read_root():
+    return {"message": "FastAPI job scraper is running"}

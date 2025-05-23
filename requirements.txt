@@ -1,4 +1,5 @@
 fastapi
 uvicorn
-beautifulsoup4
-requests
+serpapi
+cassandra-driver
+python-dotenv

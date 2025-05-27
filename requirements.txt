@@ -3,4 +3,4 @@ uvicorn
 httpx
 python-dotenv
 cassandra-driver
-serpapi
+serpapi==0.1.4

@@ -1,7 +1,9 @@
 fastapi
 uvicorn
 httpx
+beautifulsoup4
 python-dotenv
+sendgrid
 cassandra-driver
 serpapi==0.1.4
 google-search-results

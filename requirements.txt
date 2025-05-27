@@ -4,3 +4,4 @@ httpx
 python-dotenv
 cassandra-driver
 serpapi==0.1.4
+google-search-results

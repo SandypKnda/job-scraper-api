@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from app.utils import hash_url, send_email, connect_astra, save_if_new
 
+app = FastAPI()
+
 # Sample companies with dedicated job pages
 COMPANY_CAREER_PAGES = {
     "Airbnb": "https://careers.airbnb.com/positions/",

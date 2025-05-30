@@ -1,5 +1,5 @@
-fastapi
-uvicorn[standard]
+fastapi==0.110.0
+uvicorn==0.29.0
 httpx
 beautifulsoup4
 python-dotenv

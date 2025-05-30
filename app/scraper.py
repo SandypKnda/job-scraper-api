@@ -3,6 +3,7 @@ import httpx
 from bs4 import BeautifulSoup
 from datetime import datetime
 from app.utils import hash_url, send_email, connect_astra, save_if_new
+from fastapi import FastAPI
 
 app = FastAPI()
 

@@ -1,12 +1,8 @@
 # app/main.py
 from fastapi import FastAPI
-from app.scraper import run_scraper
+from app.scraper import run_scraper   # use absolute import
 
 app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Job Scraper is running"}
 
 @app.get("/scrape")
 def scrape_jobs():

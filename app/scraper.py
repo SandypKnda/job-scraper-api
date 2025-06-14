@@ -25,33 +25,36 @@ def scrape_page(url):
         return None
 
 def run_scraper():
-    db_session = connect_astra()
-    new_jobs = []
+    try:
+        db_session = connect_astra()
+        new_jobs = []
 
-    for company, url in fetch_company_urls_from_db():
-        soup = scrape_page(url)
-        if not soup:
-            continue
+        sources = get_all_sources(db_session)
+        if not sources:
+            print("No job sources found in DB.")
+            return []
 
-        for a in soup.find_all("a", href=True):
-            try:
-                text = a.text.strip().lower()
+        for company, url in sources:
+            soup = scrape_page(url)
+            if not soup:
+                continue
+
+            for a in soup.find_all("a", href=True):
                 href = a["href"]
-                if not text or any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
+                if any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
                     continue
-                if "data engineer" in text:
-                    if "remote" in text or not any(x in text for x in ["onsite", "hybrid"]):
-                        continue
+                if "data engineer" in a.text.lower():
                     job_url = href if href.startswith("http") else url + href
                     title = a.text.strip()
                     job_id = hash_url(job_url)
                     inserted = save_if_new(db_session, job_id, job_url, title, company)
                     if inserted:
                         new_jobs.append((title, job_url))
-            except Exception as e:
-                print(f"[WARN] Error parsing link: {e}")
-                continue
 
-    if new_jobs:
-        send_email(new_jobs)
-    return new_jobs
+        if new_jobs:
+            send_email(new_jobs)
+
+        return new_jobs
+    except Exception as e:
+        print(f"[run_scraper ERROR] {e}")  # Key print for debugging
+        return []

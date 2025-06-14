@@ -4,69 +4,54 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from app.utils import hash_url, send_email, connect_astra, save_if_new
 from fastapi import FastAPI
-import traceback
 
 app = FastAPI()
 
-COMPANY_CAREER_PAGES = {
-    "Airbnb": "https://careers.airbnb.com/positions/",
-    "Stripe": "https://stripe.com/jobs/search?country=US&team=engineering",
-    "Snowflake": "https://careers.snowflake.com/us/en",
-}
+def fetch_company_urls_from_db():
+    session = connect_astra()
+    rows = session.execute("SELECT company, url FROM job_sources")
+    return [(row.company, row.url) for row in rows]
 
 def scrape_page(url):
     try:
-        with httpx.Client(timeout=10.0) as client:
-            r = client.get(url)
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "html.parser")
-            return soup
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(url)
+            if resp.status_code != 200:
+                print(f"Non-200 from {url}: {resp.status_code}")
+                return None
+            return BeautifulSoup(resp.text, "html.parser")
     except Exception as e:
-        print(f"Error fetching {url}: {e}")
+        print(f"[ERROR] Fetch failed for {url}: {e}")
         return None
 
 def run_scraper():
-    try:
-        db_session = connect_astra()
-        new_jobs = []
+    db_session = connect_astra()
+    new_jobs = []
 
-        for company, url in COMPANY_CAREER_PAGES.items():
-            print(f"Scraping jobs for {company} from {url}")
-            soup = scrape_page(url)
-            if not soup:
-                print(f"Failed to scrape {url}")
-                continue
+    for company, url in fetch_company_urls_from_db():
+        soup = scrape_page(url)
+        if not soup:
+            continue
 
-            for a in soup.find_all("a", href=True):
+        for a in soup.find_all("a", href=True):
+            try:
+                text = a.text.strip().lower()
                 href = a["href"]
-                # Skip unwanted links
-                if any(x in href.lower() for x in ["linkedin", "glassdoor", "indeed"]):
+                if not text or any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
                     continue
-                if "data engineer" in a.text.lower():
-                    # Compose absolute job URL carefully
-                    job_url = href if href.startswith("http") else os.path.join(url, href.lstrip("/"))
+                if "data engineer" in text:
+                    if "remote" in text or not any(x in text for x in ["onsite", "hybrid"]):
+                        continue
+                    job_url = href if href.startswith("http") else url + href
                     title = a.text.strip()
                     job_id = hash_url(job_url)
+                    inserted = save_if_new(db_session, job_id, job_url, title, company)
+                    if inserted:
+                        new_jobs.append((title, job_url))
+            except Exception as e:
+                print(f"[WARN] Error parsing link: {e}")
+                continue
 
-                    try:
-                        inserted = save_if_new(db_session, job_id, job_url, title, company)
-                        if inserted:
-                            new_jobs.append((title, job_url))
-                    except Exception:
-                        print(f"Failed to save job {title} - {job_url}")
-                        print(traceback.format_exc())
-                        continue
-
-        if new_jobs:
-            try:
-                send_email(new_jobs)
-            except Exception:
-                print("Failed to send email notification")
-                print(traceback.format_exc())
-
-        return new_jobs
-
-    except Exception:
-        print("Exception in run_scraper:")
-        print(traceback.format_exc())
-        return []
+    if new_jobs:
+        send_email(new_jobs)
+    return new_jobs

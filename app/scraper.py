@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from app.utils import hash_url, send_email, connect_astra, save_if_new
 from fastapi import FastAPI
+from app.dynamic_companies import get_company_domains_from_serpapi
 
 app = FastAPI()
 
@@ -28,13 +29,14 @@ def run_scraper():
     try:
         db_session = connect_astra()
         new_jobs = []
-
+        domains = get_company_domains_from_serpapi()
         sources = get_all_sources(db_session)
         if not sources:
             print("No job sources found in DB.")
             return []
 
-        for company, url in sources:
+        for domain in domains:
+            url = f"https://{domain}"
             soup = scrape_page(url)
             if not soup:
                 continue

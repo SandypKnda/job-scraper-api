@@ -11,9 +11,9 @@ def hash_url(url: str) -> str:
 
 def connect_astra():
     try:
-        bundle_path = os.getenv("ASTRA_DB_BUNDLE_PATH", "secure-connect-your-db.zip")
+        #bundle_path = os.getenv("ASTRA_DB_BUNDLE_PATH", "secure-connect-your-db.zip")
         cloud_config = {
-            'secure_connect_bundle': bundle_path
+            'secure_connect_bundle': '/opt/render/project/src/secure-connect-job-scraper.zip'
         }
         client_id = os.getenv("ASTRA_DB_CLIENT_ID")
         client_secret = os.getenv("ASTRA_DB_CLIENT_SECRET")

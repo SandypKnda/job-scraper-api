@@ -30,10 +30,6 @@ def run_scraper():
         db_session = connect_astra()
         new_jobs = []
         domains = get_company_domains_from_serpapi()
-        sources = get_all_sources(db_session)
-        if not sources:
-            print("No job sources found in DB.")
-            return []
 
         for domain in domains:
             url = f"https://{domain}"

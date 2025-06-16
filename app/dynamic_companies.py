@@ -8,6 +8,7 @@ from datetime import datetime
 def get_company_domains_from_serpapi():
     print("🔍 Calling SerpAPI for dynamic companies...")
     search = GoogleSearch({
+        "engine": "google_jobs",
         "q": "data engineer site:jobs.*.com OR site:careers.*.com",
         "location": "United States",
         "hl": "en",

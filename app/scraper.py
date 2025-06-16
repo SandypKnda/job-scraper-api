@@ -30,6 +30,7 @@ def run_scraper():
         db_session = connect_astra()
         new_jobs = []
         domains = get_company_domains_from_serpapi()
+        print(f"Found {len(domains)} domains")      
 
         for domain in domains:
             url = f"https://{domain}"
@@ -39,9 +40,10 @@ def run_scraper():
 
             for a in soup.find_all("a", href=True):
                 href = a["href"]
+                text = a.text.lower()
                 if any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
                     continue
-                if "data engineer" in a.text.lower():
+                if any(k in text for k in ["Data Engineer", "Senior Data Engineer", "Lead Data Engineer", "Big Data Engineer", "ETL Developer", "Analytics Engineer", "Cloud Data Engineer", "DataOps Engineer", "Snowflake Engineer"]):
                     job_url = href if href.startswith("http") else url + href
                     title = a.text.strip()
                     job_id = hash_url(job_url)

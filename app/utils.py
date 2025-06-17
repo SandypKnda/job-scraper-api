@@ -5,36 +5,34 @@ from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from astrapy.db import AstraDB
 
 def hash_url(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()
 
 def connect_astra():
+    """
+    Connect to Astra DB using Data API (no secure bundle required).
+    This works perfectly on cloud environments like Render.
+    """
+    
     try:
-        bundle_path = os.getenv("ASTRA_DB_BUNDLE_PATH")
-        cloud_config = {
-            'secure_connect_bundle': bundle_path
-        }
-        client_id = os.getenv("ASTRA_DB_CLIENT_ID")
-        client_secret = os.getenv("ASTRA_DB_CLIENT_SECRET")
-        keyspace = os.getenv("ASTRA_DB_KEYSPACE")
+        # Get environment variables from Render secrets or .env
+        token = os.getenv("ASTRA_DB_APPLICATION_TOKEN")
+        api_endpoint = os.getenv("ASTRA_DB_API_ENDPOINT")
+        keyspace = os.getenv("ASTRA_DB_KEYSPACE")  # Your Cassandra keyspace/namespace
 
-        print("🔧 Astra DB Config:")
-        print(f"- CLIENT_ID: {'SET' if client_id else 'MISSING'}")
-        print(f"- CLIENT_SECRET: {'SET' if client_secret else 'MISSING'}")
-        print(f"- KEYSPACE: {keyspace}")
-        print(f"📂 Bundle path: {bundle_path}")
-        print("📂 Bundle exists:", os.path.exists(bundle_path) if bundle_path else "❌ Missing BUNDLE_PATH")
+        if not token or not api_endpoint or not keyspace:
+            raise ValueError("Missing Astra DB credentials or endpoint environment variables")
 
+        # Initialize AstraDB client
+        db = AstraDB(
+            token=token,
+            api_endpoint=api_endpoint,
+            namespace=keyspace
+        )
 
-        if not all([client_id, client_secret, keyspace]):
-            raise ValueError("One or more Astra DB env vars (CLIENT_ID, CLIENT_SECRET, KEYSPACE) are missing")
-
-        auth_provider = PlainTextAuthProvider(client_id, client_secret)
-        cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-        session = cluster.connect()
-        session.set_keyspace(keyspace)
-        return session
+        return db
     except Exception:
         print("Error connecting to Astra DB:")
         print(traceback.format_exc())

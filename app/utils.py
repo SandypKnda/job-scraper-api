@@ -19,6 +19,14 @@ def connect_astra():
         client_secret = os.getenv("ASTRA_DB_CLIENT_SECRET")
         keyspace = os.getenv("ASTRA_DB_KEYSPACE")
 
+        print("🔧 Astra DB Config:")
+        print(f"- BUNDLE_PATH: {bundle_path}")
+        print(f"- CLIENT_ID: {'SET' if client_id else 'MISSING'}")
+        print(f"- CLIENT_SECRET: {'SET' if client_secret else 'MISSING'}")
+        print(f"- KEYSPACE: {keyspace}")
+        print("📂 Bundle exists:", os.path.exists(os.getenv("ASTRA_DB_BUNDLE_PATH")))
+
+
         if not all([client_id, client_secret, keyspace]):
             raise ValueError("One or more Astra DB env vars (CLIENT_ID, CLIENT_SECRET, KEYSPACE) are missing")
 

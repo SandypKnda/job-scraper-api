@@ -13,7 +13,7 @@ def connect_astra():
     try:
         #bundle_path = os.getenv("ASTRA_DB_BUNDLE_PATH", "secure-connect-your-db.zip")
         cloud_config = {
-            'secure_connect_bundle': '/etc/secrets/secure-connect-your-db.zip'
+            'secure_connect_bundle': os.getenv("ASTRA_DB_BUNDLE_PATH")
         }
         client_id = os.getenv("ASTRA_DB_CLIENT_ID")
         client_secret = os.getenv("ASTRA_DB_CLIENT_SECRET")

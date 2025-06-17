@@ -1,8 +1,6 @@
 import os
 import hashlib
 import traceback
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from astrapy.db import AstraDB

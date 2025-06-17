@@ -32,26 +32,24 @@ def connect_astra():
             namespace=keyspace
         )
 
-        return db
     except Exception:
         print("Error connecting to Astra DB:")
         print(traceback.format_exc())
         return None
 
-def save_if_new(session, job_id, url, title, company):
-    if session is None:
-        print("No valid DB session available for saving jobs")
-        return False
+def save_if_new(db, job_id, url, title, company):
     try:
-        stmt = session.prepare("SELECT id FROM job_postings WHERE id=?")
-        res = session.execute(stmt, [job_id])
-        if res.one():
+        collection = db.collection("job_postings")
+        existing = collection.find_one({"_id": job_id})
+        if existing:
             return False
-        insert_stmt = session.prepare("""
-            INSERT INTO job_postings (id, url, title, company, scraped_at)
-            VALUES (?, ?, ?, ?, toTimestamp(now()))
-        """)
-        session.execute(insert_stmt, [job_id, url, title, company])
+        collection.insert_one({
+            "_id": job_id,
+            "url": url,
+            "title": title,
+            "company": company,
+            "scraped_at": {"$date": {"$numberLong": "0"}}  # placeholder timestamp
+        })
         return True
     except Exception:
         print(f"Error saving job {title} ({url}):")

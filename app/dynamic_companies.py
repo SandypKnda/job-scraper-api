@@ -48,13 +48,13 @@ def save_discovered_companies_to_db():
 
         count = 0
         for name, domain in companies.items():
-            doc_id = f"{name}_{domain}".replace(" ", "_")
-            collection.insert_one({
-                "_id": doc_id,
+            doc = {
+                "_id": str(uuid4()),
                 "company": name,
                 "url": domain,
-                "discovered_at": {"$date": {"$numberLong": "0"}}
-            })
+                "discovered_at": datetime.utcnow().isoformat()
+                }
+            session.insert_one(doc)
             count += 1
 
         print(f"✅ Saved {count} discovered companies to DB.")

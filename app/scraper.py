@@ -11,13 +11,14 @@ from app.dynamic_companies import get_data_engineering_job_sources
 
 app = FastAPI()
 
-def load_discovered_domains(session):
+def load_discovered_domains(db):
     try:
-        rows = session.execute("SELECT company, url FROM jobs")
+        collection = db.collection("jobs")
+        rows = collection.find()
         company_pages = {}
         for row in rows:
-            name = row.name or "Unknown"
-            domain = row.domain
+            name = row.get("company", "Unknown")
+            domain = row.get("url")
             if domain:
                 if not domain.startswith("http"):
                     domain = "https://" + domain

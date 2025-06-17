@@ -33,6 +33,9 @@ def connect_astra():
             api_endpoint=api_endpoint,
             namespace=keyspace
         )
+        
+        # Return specific collection instead of whole DB
+        return db.collection("jobs")
 
     except Exception:
         print("Error connecting to Astra DB:")

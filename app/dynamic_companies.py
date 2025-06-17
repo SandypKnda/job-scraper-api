@@ -5,8 +5,9 @@ import os
 import httpx
 from uuid import uuid4
 from datetime import datetime
+from app.utils import connect_astra
 
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")  # set in Render env vars
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 RAPIDAPI_HOST = "jsearch.p.rapidapi.com"
 
 def get_data_engineering_job_sources(location="United States", limit=20):
@@ -32,31 +33,32 @@ def get_data_engineering_job_sources(location="United States", limit=20):
             employer = job.get("employer_name")
             job_url = job.get("job_apply_link") or job.get("job_google_link") or job.get("job_offer_link")
             if employer and job_url:
-                sources.add((employer, job_url.split("/")[2]))  # Extract domain from URL
+                sources.add((employer, job_url.split("/")[2]))
     except Exception as e:
         print("🔴 Error fetching JSearch data:", e)
 
     print(f"✅ Found {len(sources)} sources")
     return dict(sources)
 
-
 def save_discovered_companies_to_db():
     try:
-        session = connect_astra()
+        db = connect_astra()
+        collection = db.collection("jobs")
         companies = get_data_engineering_job_sources()
 
-        insert_stmt = session.prepare("""
-            INSERT INTO jobs (id, company, url, discovered_at) 
-            VALUES (uuid(), ?, ?, toTimestamp(now()))
-        """)
         count = 0
         for name, domain in companies.items():
-            session.execute(insert_stmt, [name, domain])
+            doc_id = f"{name}_{domain}".replace(" ", "_")
+            collection.insert_one({
+                "_id": doc_id,
+                "company": name,
+                "url": domain,
+                "discovered_at": {"$date": {"$numberLong": "0"}}
+            })
             count += 1
 
         print(f"✅ Saved {count} discovered companies to DB.")
         return count
-
     except Exception as e:
         print(f"🔴 Error saving companies to DB: {e}")
         return 0

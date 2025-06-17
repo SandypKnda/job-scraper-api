@@ -21,6 +21,10 @@ def connect_astra():
         keyspace = os.getenv("ASTRA_DB_KEYSPACE")  # Your Cassandra keyspace/namespace
 
         if not token or not api_endpoint or not keyspace:
+            print("❌ Missing environment variables:")
+            print(f"  ASTRA_DB_APPLICATION_TOKEN: {'✅' if token else '❌'}")
+            print(f"  ASTRA_DB_API_ENDPOINT: {'✅' if api_endpoint else '❌'}")
+            print(f"  ASTRA_DB_KEYSPACE: {'✅' if keyspace else '❌'}")
             raise ValueError("Missing Astra DB credentials or endpoint environment variables")
 
         # Initialize AstraDB client

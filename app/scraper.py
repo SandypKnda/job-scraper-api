@@ -4,14 +4,28 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from app.utils import hash_url, send_email, connect_astra, save_if_new
 from fastapi import FastAPI
-from app.dynamic_companies import get_company_domains_from_serpapi
+from app.dynamic_companies import get_data_engineering_job_sources
+
+
+#from app.dynamic_companies import get_company_domains_from_serpapi
 
 app = FastAPI()
 
-def fetch_company_urls_from_db():
-    session = connect_astra()
-    rows = session.execute("SELECT company, url FROM job_sources")
-    return [(row.company, row.url) for row in rows]
+def load_discovered_domains(session):
+    try:
+        rows = session.execute("SELECT company, url FROM jobs")
+        company_pages = {}
+        for row in rows:
+            name = row.name or "Unknown"
+            domain = row.domain
+            if domain:
+                if not domain.startswith("http"):
+                    domain = "https://" + domain
+                company_pages[name] = domain
+        return company_pages
+    except Exception as e:
+        print(f"🔴 Error loading domains from DB: {e}")
+        return {}
 
 def scrape_page(url):
     try:
@@ -29,32 +43,38 @@ def run_scraper():
     try:
         db_session = connect_astra()
         new_jobs = []
-        domains = get_company_domains_from_serpapi()
-        print(f"Found {len(domains)} domains")      
+        company_pages = load_discovered_domains(db_session)
+        if not company_pages:
+            print("⚠️ No company domains found in DB.")
+            return []
 
-        for domain in domains:
-            url = f"https://{domain}"
+        new_jobs = []
+
+        for company, url in company_pages.items():
+            print(f"🔍 Scraping jobs from: {company} ({url})")
             soup = scrape_page(url)
             if not soup:
                 continue
 
+
+
             for a in soup.find_all("a", href=True):
                 href = a["href"]
-                text = a.text.lower()
                 if any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
                     continue
-                if any(k in text for k in ["Data Engineer", "Senior Data Engineer", "Lead Data Engineer", "Big Data Engineer", "ETL Developer", "Analytics Engineer", "Cloud Data Engineer", "DataOps Engineer", "Snowflake Engineer"]):
-                    job_url = href if href.startswith("http") else url + href
+                if "data engineer" in a.text.lower():
+                    job_url = href if href.startswith("http") else base_url.rstrip("/") + "/" + href.lstrip("/")
                     title = a.text.strip()
                     job_id = hash_url(job_url)
                     inserted = save_if_new(db_session, job_id, job_url, title, company)
                     if inserted:
                         new_jobs.append((title, job_url))
 
+
         if new_jobs:
             send_email(new_jobs)
-
         return new_jobs
+        
     except Exception as e:
         print(f"[run_scraper ERROR] {e}")  # Key print for debugging
         return []

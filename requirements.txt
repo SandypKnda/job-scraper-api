@@ -7,3 +7,4 @@ sendgrid
 cassandra-driver
 serpapi==0.1.4
 google-search-results
+astrapy==1.2.0

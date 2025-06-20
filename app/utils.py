@@ -37,7 +37,7 @@ def connect_astra():
         )
         
         # Return specific collection instead of whole DB
-        return db.collection("jobs")
+        return db
 
     except Exception:
         print("Error connecting to Astra DB:")

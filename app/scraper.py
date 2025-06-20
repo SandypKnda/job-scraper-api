@@ -14,14 +14,17 @@ app = FastAPI()
 def load_discovered_domains(db):
     try:
         collection = db.collection("jobs")  # Get the collection object
-        rows = collection.find()  # List of dicts
+        rows = collection.find(filter={})  # List of dicts
         company_pages = {}
         for row in rows:
-            name = row.get("company", "Unknown")
-            domain = row.get("url", "")
-            if domain and not domain.startswith("http"):
-                domain = "https://" + domain
-            company_pages[name] = domain
+            if isinstance(row, dict):  # ✅ Always verify
+                name = row.get("company", "Unknown")
+                domain = row.get("url", "")
+                if domain and not domain.startswith("http"):
+                    domain = "https://" + domain
+                company_pages[name] = domain
+            else:
+                print(f"⚠️ Skipped unexpected row type: {type(row)} → {row}")
         return company_pages
     except Exception as e:
         print(f"🔴 Error loading domains from DB: {e}")
@@ -42,6 +45,9 @@ def scrape_page(url):
 def run_scraper():
     try:
         db_session = connect_astra()
+        if db is None:
+        print("❌ DB connection failed")
+        return []
         new_jobs = []
         company_pages = load_discovered_domains(db_session)
         if not company_pages:

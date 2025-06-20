@@ -18,9 +18,9 @@ def connect_astra():
     
     try:
         # Get environment variables from Render secrets or .env
-        token = os.getenv("ASTRA_DB_APPLICATION_TOKEN")
-        api_endpoint = os.getenv("ASTRA_DB_API_ENDPOINT")
-        keyspace = os.getenv("ASTRA_DB_KEYSPACE")  # Your Cassandra keyspace/namespace
+        token = os.getenv("ASTRA_DB_APPLICATION_TOKEN", "").strip().strip('"').strip("'")
+        api_endpoint = os.getenv("ASTRA_DB_API_ENDPOINT", "").strip().strip('"').strip("'")
+        keyspace = os.getenv("ASTRA_DB_KEYSPACE", "").strip().strip('"').strip("'")
 
         if not token or not api_endpoint or not keyspace:
             print("❌ Missing environment variables:")

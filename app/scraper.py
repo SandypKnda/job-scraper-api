@@ -20,11 +20,10 @@ def load_discovered_domains(db):
         company_pages = {}
         for row in rows:
             name = row.get("company", "Unknown")
-            domain = row.get("url")
-            if domain:
-                if not domain.startswith("http"):
-                    domain = "https://" + domain
-                company_pages[name] = domain
+            domain = row.get("url", "")
+            if domain and not domain.startswith("http"):
+                domain = "https://" + domain
+            company_pages[name] = domain
         return company_pages
     except Exception as e:
         print(f"🔴 Error loading domains from DB: {e}")

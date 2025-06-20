@@ -43,6 +43,8 @@ def get_data_engineering_job_sources(location="United States", limit=20):
 def save_discovered_companies_to_db():
     try:
         db = connect_astra()
+        if not db:
+            return 0
         collection = db.collection("jobs")
         companies = get_data_engineering_job_sources()
 
@@ -54,7 +56,7 @@ def save_discovered_companies_to_db():
                 "url": domain,
                 "discovered_at": datetime.utcnow().isoformat()
                 }
-            session.insert_one(doc)
+            collection.insert_one(document=doc)
             count += 1
 
         print(f"✅ Saved {count} discovered companies to DB.")

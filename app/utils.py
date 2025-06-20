@@ -4,6 +4,8 @@ import traceback
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from astrapy.db import AstraDB
+from dotenv import load_dotenv
+load_dotenv()
 
 def hash_url(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()

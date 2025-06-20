@@ -13,10 +13,8 @@ app = FastAPI()
 
 def load_discovered_domains(db):
     try:
-        collection = connect_astra()
-        if not collection:
-            return {}
-        rows = collection.find()
+        collection = db.collection("jobs")  # Get the collection object
+        rows = collection.find()  # List of dicts
         company_pages = {}
         for row in rows:
             name = row.get("company", "Unknown")

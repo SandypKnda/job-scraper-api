@@ -11,6 +11,29 @@ from app.dynamic_companies import get_data_engineering_job_sources
 
 app = FastAPI()
 
+def cleanup_invalid_jobs():
+    db = connect_astra()
+    collection = db.collection("jobs")
+    docs = collection.find()
+
+    deleted = 0
+    for doc in docs:
+        if isinstance(doc, str):
+            try:
+                collection.delete_one({"_id": doc})  # string docs may not have _id
+                deleted += 1
+            except:
+                pass  # silently skip
+        elif not isinstance(doc, dict):
+            deleted += 1
+            collection.delete_one({"_id": doc["_id"]})
+
+    print(f"🧹 Deleted {deleted} invalid job entries.")
+
+if __name__ == "__main__":
+    cleanup_invalid_jobs()
+
+
 def load_discovered_domains(db):
     try:
         collection = db.collection("jobs")  # Get the collection object

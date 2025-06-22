@@ -66,7 +66,7 @@ def run_scraper():
 
             for a in soup.find_all("a", href=True):
                 href = a["href"]
-                if any(x in href for x in ["linkedin", "glassdoor", "indeed"]):
+                if any(x in href for x in ["linkedin", "glassdoor", "indeed","ziprecruiter","dice","jobot"]):
                     continue
                 if "data engineer" in a.text.lower():
                     job_url = href if href.startswith("http") else base_url.rstrip("/") + "/" + href.lstrip("/")

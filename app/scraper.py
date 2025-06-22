@@ -46,8 +46,8 @@ def run_scraper():
     try:
         db_session = connect_astra()
         if db is None:
-        print("❌ DB connection failed")
-        return []
+            print("❌ DB connection failed")
+            return []
         new_jobs = []
         company_pages = load_discovered_domains(db_session)
         if not company_pages:

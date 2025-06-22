@@ -6,4 +6,4 @@ python-dotenv
 sendgrid
 serpapi==0.1.4
 google-search-results
-astrapy==0.4.1
+astrapy==1.5.2

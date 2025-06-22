@@ -45,7 +45,7 @@ def scrape_page(url):
 def run_scraper():
     try:
         db_session = connect_astra()
-        if db is None:
+        if db_session is None:
             print("❌ DB connection failed")
             return []
         new_jobs = []

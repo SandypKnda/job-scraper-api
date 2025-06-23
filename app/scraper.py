@@ -34,20 +34,23 @@ if __name__ == "__main__":
     cleanup_invalid_jobs()
 
 
-def load_discovered_domains(db):
+def load_discovered_domains(collection):
     try:
-        collection = db.collection("jobs")  # Get the collection object
+        #collection = db.collection("jobs")  # Get the collection object
         rows = collection.find(filter={})  # List of dicts
         company_pages = {}
         for row in rows:
-            if isinstance(row, dict):  # ✅ Always verify
-                name = row.get("company", "Unknown")
-                domain = row.get("url", "")
-                if domain and not domain.startswith("http"):
-                    domain = "https://" + domain
-                company_pages[name] = domain
-            else:
+            if not isinstance(row, dict):
                 print(f"⚠️ Skipped unexpected row type: {type(row)} → {row}")
+                continue
+
+            name = row.get("company", "Unknown")
+            domain = row.get("url", "")
+            if domain and not domain.startswith("http"):
+                domain = "https://" + domain
+            company_pages[name] = domain
+
+        print(f"✅ Loaded {len(company_pages)} valid company domains")
         return company_pages
     except Exception as e:
         print(f"🔴 Error loading domains from DB: {e}")
@@ -67,12 +70,11 @@ def scrape_page(url):
 
 def run_scraper():
     try:
-        db_session = connect_astra()
-        if db_session is None:
-            print("❌ DB connection failed")
+        collection = connect_astra()
+        if not collection:
+            print("❌ Failed to connect to Astra collection")
             return []
-        new_jobs = []
-        company_pages = load_discovered_domains(db_session)
+        company_pages = load_discovered_domains(collection)
         if not company_pages:
             print("⚠️ No company domains found in DB.")
             return []

@@ -37,25 +37,25 @@ def connect_astra():
         )
         
         # Return specific collection instead of whole DB
-        return db
+        return db.collection("jobs")  # ✅ THIS IS CORRECT
 
     except Exception:
         print("Error connecting to Astra DB:")
         print(traceback.format_exc())
         return None
 
-def save_if_new(db, job_id, url, title, company):
+def save_if_new(collection, job_id, url, title, company):
     try:
-        collection = db.collection("job_postings")
-        existing = collection.find_one({"_id": job_id})
+        #collection = db.collection("job_postings")
+        existing = collection.find_one({"id": job_id})
         if existing:
             return False
         collection.insert_one({
-            "_id": job_id,
+            "id": job_id,
             "url": url,
             "title": title,
             "company": company,
-            "scraped_at": {"$date": {"$numberLong": "0"}}  # placeholder timestamp
+            "scraped_at": datetime.utcnow().isoformat()  # placeholder timestamp
         })
         return True
     except Exception:

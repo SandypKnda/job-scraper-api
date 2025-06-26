@@ -66,9 +66,13 @@ def load_discovered_domains(collection):
 def scrape_page(url):
     try:
         with httpx.Client(timeout=15.0) as client:
-            resp = client.get(url)
-            if resp.status_code != 200:
+            resp = client.get(url, allow_redirects=True, timeout=10)
+            if response.status_code == 200:
+                print(f"✅ Successfully fetched {response.url}")
+            else:
                 print(f"Non-200 from {url}: {resp.status_code}")
+                for r in resp.history:
+                    print(f"🔁 Redirected from {r.url} → {r.status_code}")
                 return None
             return BeautifulSoup(resp.text, "html.parser")
     except Exception as e:

@@ -36,24 +36,31 @@ if __name__ == "__main__":
 
 def load_discovered_domains(collection):
     try:
-        #collection = db.collection("jobs")  # Get the collection object
-        rows = collection.find(filter={})  # List of dicts
+        rows = collection.find()
+        documents = rows.get("data", {}).get("documents", [])
         company_pages = {}
-        for row in rows:
+        for row in documents:
             if not isinstance(row, dict):
                 print(f"⚠️ Skipped unexpected row type: {type(row)} → {row}")
+                try:
+                    print("🔍 Parsed version:", json.loads(row))
+                except Exception as e:
+                    print(f"❌ Could not parse row: {e}")
                 continue
 
             name = row.get("company", "Unknown")
             domain = row.get("url", "")
-            if domain and not domain.startswith("http"):
-                domain = "https://" + domain
-            company_pages[name] = domain
+
+            if domain:
+                if not domain.startswith("http"):
+                    domain = "https://" + domain
+                company_pages[name] = domain
 
         print(f"✅ Loaded {len(company_pages)} valid company domains")
         return company_pages
     except Exception as e:
         print(f"🔴 Error loading domains from DB: {e}")
+        print(rows)
         return {}
 
 def scrape_page(url):

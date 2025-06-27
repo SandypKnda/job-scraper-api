@@ -112,9 +112,9 @@ def run_scraper():
                     continue
 
                 # ✅ Loosened filter for testing
-                if "engineer" in text.lower():  # Change back to "data engineer" later
+                if any(x in href.lower() for x in ["job", "career", "role"]):  # Change back to "data engineer" later
                     job_url = href if href.startswith("http") else base_url.rstrip("/") + "/" + href.lstrip("/")
-                    title = text
+                    title = text or "Unknown"
                     job_id = hash_url(job_url)
 
                     print(f"🆕 Found potential job: {title} → {job_url}")  # ✅ Debug log

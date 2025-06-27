@@ -98,25 +98,39 @@ def run_scraper():
             if not soup:
                 continue
 
+            base_url = url  # ✅ Added to fix undefined variable issue
 
-
+            print(f"🔍 Parsing job links from: {url}")
             for a in soup.find_all("a", href=True):
+                text = a.text.strip()
                 href = a["href"]
-                if any(x in href for x in ["linkedin", "glassdoor", "indeed","ziprecruiter","dice","jobot"]):
-                    continue
-                if "data engineer" in a.text.lower():
-                    job_url = href if href.startswith("http") else base_url.rstrip("/") + "/" + href.lstrip("/")
-                    title = a.text.strip()
-                    job_id = hash_url(job_url)
-                    inserted = save_if_new(db_session, job_id, job_url, title, company)
-                    if inserted:
-                        new_jobs.append((title, job_url))
 
+                print(f"🔗 {text} → {href}")  # ✅ Log all links
+
+                # Skipping known aggregator sites
+                if any(x in href for x in ["linkedin", "glassdoor", "indeed", "ziprecruiter", "dice", "jobot"]):
+                    continue
+
+                # ✅ Loosened filter for testing
+                if "engineer" in text.lower():  # Change back to "data engineer" later
+                    job_url = href if href.startswith("http") else base_url.rstrip("/") + "/" + href.lstrip("/")
+                    title = text
+                    job_id = hash_url(job_url)
+
+                    print(f"🆕 Found potential job: {title} → {job_url}")  # ✅ Debug log
+
+                    inserted = save_if_new(collection, job_id, job_url, title, company)
+                    if inserted:
+                        print(f"✅ Inserted: {title}")
+                        new_jobs.append((title, job_url))
+                    else:
+                        print(f"⏭️ Skipped (duplicate?): {title}")
 
         if new_jobs:
             send_email(new_jobs)
         return new_jobs
-        
+
     except Exception as e:
         print(f"[run_scraper ERROR] {e}")  # Key print for debugging
         return []
+
